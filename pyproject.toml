@@ -3,12 +3,12 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "semantic-merge-guard"
+name = "orderstream-semantic-merge-guard"
 version = "1.0.0"
 description = "Cross-file AST dependency graph analyzer in CI that catches silent semantic merge conflicts that text-based Git merges miss."
 readme = "README.md"
 requires-python = ">=3.9"
-authors = [{ name = "OrderStream", email = "orderstream@users.noreply.github.com" }]
+authors = [{ name = "OrderStream", email = "hashdecode77@gmail.com" }]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
