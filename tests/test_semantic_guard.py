@@ -87,6 +87,28 @@ router.post('/checkout', (req, res) => {});
     assert "DUPLICATE_ROUTE" in kinds
     assert "ARITY_MISMATCH" in kinds
 
+def test_variadic_and_zero_arg_functions(tmp_path):
+    guard = SemanticMergeGuard()
+
+    # 1. 0-arg function called with extra args -> SHOULD FAIL
+    f1 = str(tmp_path / "zero.py")
+    guard.scan_file(f1, "def stop_server(): pass\n")
+    f2 = str(tmp_path / "caller.py")
+    guard.scan_file(f2, "def invoke(): stop_server('immediate', True)\n")
+
+    # 2. Variadic function called with multiple args -> SHOULD PASS
+    f3 = str(tmp_path / "var.py")
+    guard.scan_file(f3, "def custom_logger(msg, *args, **kwargs): pass\n")
+    f4 = str(tmp_path / "log_call.py")
+    guard.scan_file(f4, "def emit(): custom_logger('hello', 1, 2, 3, debug=True)\n")
+
+    conflicts = guard.analyze_conflicts()
+    # Only stop_server should be flagged
+    assert len(conflicts) == 1
+    assert conflicts[0].target_name == "stop_server"
+    assert conflicts[0].kind == "ARITY_MISMATCH"
+
+
 def test_cli_execution(tmp_path):
     # Test on empty clean dir
     clean_dir = tmp_path / "clean_repo"

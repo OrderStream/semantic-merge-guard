@@ -17,6 +17,7 @@ class FuncDef:
     required_args: int
     total_args: int
     arg_names: List[str]
+    has_varargs: bool = False
 
 @dataclass
 class FuncCall:
@@ -74,13 +75,15 @@ class SemanticMergeGuard:
                 adjusted_total = total - (1 if is_method else 0)
                 required = adjusted_total - defaults
 
+                has_varargs = bool(node.args.vararg or node.args.kwarg)
                 fdef = FuncDef(
                     name=node.name,
                     file_path=file_path,
                     line=node.lineno,
                     required_args=max(0, required),
                     total_args=max(0, adjusted_total),
-                    arg_names=names[1:] if is_method else names
+                    arg_names=names[1:] if is_method else names,
+                    has_varargs=has_varargs
                 )
                 self.definitions.setdefault(node.name, []).append(fdef)
 
@@ -125,13 +128,15 @@ class SemanticMergeGuard:
                 params_str = match_func.group(2).strip()
                 params = [p.strip() for p in params_str.split(",") if p.strip()] if params_str else []
                 req_params = [p for p in params if "=" not in p and "?" not in p]
+                has_varargs = any("..." in p for p in params)
                 self.definitions.setdefault(name, []).append(FuncDef(
                     name=name,
                     file_path=file_path,
                     line=idx,
                     required_args=len(req_params),
                     total_args=len(params),
-                    arg_names=params
+                    arg_names=params,
+                    has_varargs=has_varargs
                 ))
 
             # Route registration: app.get("/api/...", ...) or router.post("/...", ...)
@@ -202,8 +207,8 @@ class SemanticMergeGuard:
                         ))
                         break
                     
-                    # If caller passed more args than total allowed
-                    elif call.arg_count > fdef.total_args and fdef.total_args > 0:
+                    # If caller passed more args than total allowed (and function is not variadic)
+                    elif not fdef.has_varargs and call.arg_count > fdef.total_args:
                         self.conflicts.append(SemanticConflict(
                             kind="ARITY_MISMATCH",
                             severity="HIGH",
