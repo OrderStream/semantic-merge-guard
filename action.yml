@@ -1,0 +1,47 @@
+name: "Semantic Merge Guard"
+description: "Block silent semantic merge conflicts across files in PRs that text-based Git merges miss"
+branding:
+  icon: "git-merge"
+  color: "purple"
+inputs:
+  path:
+    description: "Directory path to scan"
+    required: false
+    default: "."
+  fail_on_warning:
+    description: "Whether to fail on HIGH/WARNING severity issues"
+    required: false
+    default: "false"
+  license_key:
+    description: "OrderStream Pro/Enterprise license key (optional)"
+    required: false
+    default: ""
+outputs:
+  conflicts_count:
+    description: "Total semantic conflicts detected"
+    value: ${{ steps.guard.outputs.conflicts_count }}
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+    - name: Install semantic-merge-guard
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ${{ github.action_path }}
+    - name: Run Semantic Merge Guard Check
+      id: guard
+      shell: bash
+      env:
+        ORDERSTREAM_LICENSE_KEY: ${{ inputs.license_key }}
+      run: |
+        WARN_FLAG=""
+        if [ "${{ inputs.fail_on_warning }}" = "true" ]; then
+          WARN_FLAG="--fail-on-warning"
+        fi
+        semantic-merge-guard check \
+          --path "${{ inputs.path }}" \
+          $WARN_FLAG

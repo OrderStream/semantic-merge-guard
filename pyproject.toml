@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "semantic-merge-guard"
+version = "1.0.0"
+description = "Cross-file AST dependency graph analyzer in CI that catches silent semantic merge conflicts that text-based Git merges miss."
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [{ name = "OrderStream", email = "orderstream@users.noreply.github.com" }]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Version Control :: Git",
+]
+dependencies = []
+
+[project.scripts]
+semantic-merge-guard = "semantic_merge_guard.cli:main"
